@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { validateConfirmPassword, validateEmail, validateLogin, validatePassword, validateRequired } from '@/lib/validation/validators';
+import { validateConfirmPassword, validateEmail, validatePassword, validateRequired } from '@/lib/validation/validators';
 import { useAuthContext } from '@/lib/auth';
 import { Eye, EyeOff } from 'lucide-react';
 import Link from 'next/link';
@@ -14,14 +14,12 @@ export default function RegisterForm({ className = '' }: RegisterFormProps) {
   const { register, isLoading } = useAuthContext();
   const isMobileWhite = className.includes('text-white');
   const [formData, setFormData] = useState({
-    login: '',
     email: '',
     password: '',
     confirmPassword: ''
   });
 
   const [errors, setErrors] = useState({
-    login: '',
     email: '',
     password: '',
     confirmPassword: ''
@@ -33,8 +31,6 @@ export default function RegisterForm({ className = '' }: RegisterFormProps) {
 
   const validateField = (name: string, value: string) => {
     switch (name) {
-      case 'login':
-        return validateLogin(value);
       case 'email':
         return validateEmail(value);
       case 'password':
@@ -60,7 +56,6 @@ export default function RegisterForm({ className = '' }: RegisterFormProps) {
     
     // Валидация всех полей
     const newErrors = {
-      login: validateField('login', formData.login),
       email: validateField('email', formData.email),
       password: validateField('password', formData.password),
       confirmPassword: validateField('confirmPassword', formData.confirmPassword)
@@ -103,27 +98,6 @@ export default function RegisterForm({ className = '' }: RegisterFormProps) {
 
       {/* Форма */}
       <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Поле логина */}
-        <div>
-          <label htmlFor="login" className={`block text-sm font-medium mb-1 ${isMobileWhite ? 'text-white' : 'text-gray-700'}`}>
-            Логин
-          </label>
-          <input
-            type="text"
-            id="login"
-            name="login"
-            value={formData.login}
-            onChange={handleInputChange}
-            placeholder="gfemfvsdn"
-            className={`w-full px-3 py-2 border rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-              errors.login ? 'border-red-300' : 'border-gray-300'
-            }`}
-          />
-          {errors.login && (
-            <p className="mt-1 text-sm text-red-600">{errors.login}</p>
-          )}
-        </div>
-
         {/* Поле email */}
         <div>
           <label htmlFor="email" className={`block text-sm font-medium mb-1 ${isMobileWhite ? 'text-white' : 'text-gray-700'}`}>

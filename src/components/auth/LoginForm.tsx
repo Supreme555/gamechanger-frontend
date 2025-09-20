@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { validateLogin, validatePassword, validateRequired } from '@/lib/validation/validators';
+import { validateEmail, validatePassword, validateRequired } from '@/lib/validation/validators';
 import { useAuthContext } from '@/lib/auth';
 import { Eye, EyeOff } from 'lucide-react';
 
@@ -14,12 +14,12 @@ export default function LoginForm({ className = '' }: LoginFormProps) {
   const { login, isLoading } = useAuthContext();
   const isMobileWhite = className.includes('text-white');
   const [formData, setFormData] = useState({
-    login: '',
+    email: '',
     password: ''
   });
 
   const [errors, setErrors] = useState({
-    login: '',
+    email: '',
     password: ''
   });
 
@@ -28,8 +28,8 @@ export default function LoginForm({ className = '' }: LoginFormProps) {
 
   const validateField = (name: string, value: string) => {
     switch (name) {
-      case 'login':
-        return validateLogin(value) || '';
+      case 'email':
+        return validateEmail(value) || '';
       case 'password':
         return validatePassword(value);
       default:
@@ -51,7 +51,7 @@ export default function LoginForm({ className = '' }: LoginFormProps) {
     
     // Валидация всех полей
     const newErrors = {
-      login: validateField('login', formData.login),
+      email: validateField('email', formData.email),
       password: validateField('password', formData.password)
     };
     
@@ -63,7 +63,7 @@ export default function LoginForm({ className = '' }: LoginFormProps) {
     
     if (!hasErrors) {
       const result = await login({
-        email: formData.login, // Используем login как email
+        email: formData.email,
         password: formData.password
       });
 
@@ -92,24 +92,24 @@ export default function LoginForm({ className = '' }: LoginFormProps) {
 
       {/* Форма */}
       <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Поле логина */}
+        {/* Поле почты */}
         <div>
-          <label htmlFor="login" className={`block text-sm font-medium mb-1 ${isMobileWhite ? 'text-white' : 'text-gray-700'}`}>
-            Логин
+          <label htmlFor="email" className={`block text-sm font-medium mb-1 ${isMobileWhite ? 'text-white' : 'text-gray-700'}`}>
+            Почта
           </label>
           <input
-            type="text"
-            id="login"
-            name="login"
-            value={formData.login}
+            type="email"
+            id="email"
+            name="email"
+            value={formData.email}
             onChange={handleInputChange}
-            placeholder="gfemfvsdn"
+            placeholder="Введите email"
             className={`w-full px-3 py-2 border rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-              errors.login ? 'border-red-300' : 'border-gray-300'
+              errors.email ? 'border-red-300' : 'border-gray-300'
             }`}
           />
-          {errors.login && (
-            <p className="mt-1 text-sm text-red-600">{errors.login}</p>
+          {errors.email && (
+            <p className="mt-1 text-sm text-red-600">{errors.email}</p>
           )}
         </div>
 

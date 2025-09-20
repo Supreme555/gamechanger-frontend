@@ -5,7 +5,7 @@ import { jwtVerify } from 'jose';
 const publicRoutes = ['/auth/login', '/auth/register'];
 
 // Защищенные маршруты, которые требуют аутентификации
-const protectedRoutes = ['/dashboard', '/profile', '/orders', '/payments', '/broadcast'];
+const protectedRoutes = ['/dashboard'];
 
 // Роуты только для администраторов
 const adminRoutes = ['/admin'];
