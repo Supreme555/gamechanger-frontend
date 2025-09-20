@@ -16,6 +16,15 @@ export function validateLogin(value: string): string {
   return value.length >= 3 ? '' : 'Логин должен содержать минимум 3 символа';
 }
 
+export function validateName(value: string): string {
+  const required = validateRequired(value);
+  if (required) return required;
+  if (/\s/.test(value)) {
+    return 'Имя не должно содержать пробелов';
+  }
+  return '';
+}
+
 export function validatePassword(value: string): string {
   const required = validateRequired(value);
   if (required) return required;
