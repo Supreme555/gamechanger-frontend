@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { validateConfirmPassword, validateEmail, validateLogin, validatePassword, validateRequired } from '@/lib/validation/validators';
+import { useAuthContext } from '@/lib/auth';
 import { Eye, EyeOff } from 'lucide-react';
 import Link from 'next/link';
 
@@ -10,6 +11,7 @@ interface RegisterFormProps {
 }
 
 export default function RegisterForm({ className = '' }: RegisterFormProps) {
+  const { register, isLoading } = useAuthContext();
   const isMobileWhite = className.includes('text-white');
   const [formData, setFormData] = useState({
     login: '',
@@ -27,6 +29,7 @@ export default function RegisterForm({ className = '' }: RegisterFormProps) {
 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [submitError, setSubmitError] = useState('');
 
   const validateField = (name: string, value: string) => {
     switch (name) {
@@ -52,7 +55,7 @@ export default function RegisterForm({ className = '' }: RegisterFormProps) {
     setErrors(prev => ({ ...prev, [name]: error }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     // Валидация всех полей
@@ -64,20 +67,27 @@ export default function RegisterForm({ className = '' }: RegisterFormProps) {
     };
     
     setErrors(newErrors);
+    setSubmitError('');
     
     // Проверка на наличие ошибок
     const hasErrors = Object.values(newErrors).some(error => error !== '');
     
     if (!hasErrors) {
-      console.log('Форма отправлена:', formData);
-      // Здесь будет API запрос
+      const result = await register({
+        email: formData.email,
+        password: formData.password
+      });
+
+      if (!result.success) {
+        setSubmitError(result.error || 'Ошибка регистрации');
+      }
     }
   };
 
   // Проверка, есть ли ошибки или пустые поля
   const hasErrors = Object.values(errors).some(error => error !== '');
   const hasEmptyFields = Object.values(formData).some(value => !value.trim());
-  const isSubmitDisabled = hasErrors || hasEmptyFields;
+  const isSubmitDisabled = hasErrors || hasEmptyFields || isLoading;
 
   return (
     <div className={className}>
@@ -203,6 +213,13 @@ export default function RegisterForm({ className = '' }: RegisterFormProps) {
           )}
         </div>
 
+        {/* Ошибка отправки */}
+        {submitError && (
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md text-sm">
+            {submitError}
+          </div>
+        )}
+
         {/* Кнопка отправки */}
         <button
           type="submit"
@@ -213,7 +230,7 @@ export default function RegisterForm({ className = '' }: RegisterFormProps) {
               : 'bg-blue-600 hover:bg-blue-700 text-white focus:ring-blue-500'
           }`}
         >
-          Отправить
+          {isLoading ? 'Регистрация...' : 'Отправить'}
         </button>
       </form>
 
