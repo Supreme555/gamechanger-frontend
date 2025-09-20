@@ -32,7 +32,7 @@ const navItems: NavItem[] = [
 
 export default function Header({ className = "" }: HeaderProps) {
   const pathname = usePathname();
-  const { logout, user } = useAuthContext();
+  const { logout } = useAuthContext();
 
   const handleLogout = async () => {
     await logout();
@@ -41,22 +41,7 @@ export default function Header({ className = "" }: HeaderProps) {
   return (
     <header className={`w-full border-b bg-white ${className}`}>
       <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-3">
-        <div className="flex items-center justify-between">
-          {/* Информация о пользователе */}
-          <div className="flex items-center gap-3">
-            <div className="h-8 w-8 bg-blue-600 rounded-full flex items-center justify-center">
-              <User className="h-4 w-4 text-white" />
-            </div>
-            <div>
-              <p className="text-sm font-medium text-gray-900">
-                {user?.email || 'Пользователь'}
-              </p>
-              <p className="text-xs text-gray-500 capitalize">
-                {user?.role || 'user'}
-              </p>
-            </div>
-          </div>
-
+        <div className="flex items-center justify-end">
           {/* Навигация и кнопка выхода */}
           <div className="flex items-center gap-2">
             <nav className="flex items-center gap-2 overflow-x-auto">

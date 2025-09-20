@@ -9,3 +9,6 @@ export * from './profile';
 
 // Payments components
 export * from './payments';
+
+// Overview components
+export * from './overview';
