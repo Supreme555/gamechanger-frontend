@@ -1,7 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { validateEmail, validateRequired, validateName } from '@/lib/validation/validators';
+import { useAuthContext } from '@/lib/auth';
+import { UsersService } from '@/lib/api/services';
 import Image from 'next/image';
 
 interface ProfileFormState {
@@ -11,7 +13,9 @@ interface ProfileFormState {
   address: string;
 }
 
+
 export default function ProfileForm() {
+  const { user } = useAuthContext();
   const [form, setForm] = useState<ProfileFormState>({
     name: '',
     email: '',
@@ -26,9 +30,44 @@ export default function ProfileForm() {
     address: '',
   });
 
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
+
+  // Загрузка профиля пользователя
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        setIsLoading(true);
+        const profile = await UsersService.getProfile();
+        
+        setForm({
+          name: profile.name || '',
+          email: profile.email || '',
+          phone: profile.phone || '',
+          address: profile.address || '',
+        });
+      } catch (error) {
+        console.error('Error fetching profile:', error);
+        setErrorMessage('Ошибка загрузки профиля');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (user) {
+      fetchProfile();
+    }
+  }, [user]);
+
   const onChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
+
+    // Очищаем сообщения при изменении полей
+    setSuccessMessage('');
+    setErrorMessage('');
 
     let error = '';
     if (name === 'email') error = validateEmail(value);
@@ -37,22 +76,60 @@ export default function ProfileForm() {
     setErrors((prev) => ({ ...prev, [name]: error } as typeof prev));
   };
 
-  const onSubmit = (e: React.FormEvent) => {
+  const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Валидация полей
     const newErrors: Record<keyof ProfileFormState, string> = {
-      name: validateRequired(form.name),
+      name: validateName(form.name),
       email: validateEmail(form.email),
       phone: validateRequired(form.phone),
       address: validateRequired(form.address),
     };
     setErrors(newErrors);
+    
     const hasErrors = Object.values(newErrors).some((v) => v !== '');
-    if (!hasErrors) {
-      console.log('Save profile', form);
+    if (hasErrors) {
+      return;
+    }
+
+    try {
+      setIsSaving(true);
+      setSuccessMessage('');
+      setErrorMessage('');
+
+      // Отправляем данные на сервер
+      const updateData = {
+        name: form.name,
+        email: form.email,
+        phone: form.phone,
+        address: form.address,
+      };
+
+      await UsersService.updateProfile(updateData);
+      
+      setSuccessMessage('Профиль успешно обновлен');
+    } catch (error: unknown) {
+      console.error('Error updating profile:', error);
+      const errorMessage = error && typeof error === 'object' && 'response' in error 
+        ? (error as { response?: { data?: { message?: string } } }).response?.data?.message 
+        : 'Ошибка обновления профиля';
+      setErrorMessage(errorMessage || 'Ошибка обновления профиля');
+    } finally {
+      setIsSaving(false);
     }
   };
 
-  // Кнопка всегда активна по требованию. Валидация выполняется в onSubmit.
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="flex flex-col items-center space-y-4">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-500 border-t-transparent"></div>
+          <p className="text-gray-600">Загрузка профиля...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-[220px_1fr] gap-10">
@@ -65,6 +142,17 @@ export default function ProfileForm() {
 
       {/* Form */}
       <form onSubmit={onSubmit} className="space-y-4">
+        {/* Сообщения об успехе и ошибках */}
+        {successMessage && (
+          <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-md text-sm">
+            {successMessage}
+          </div>
+        )}
+        {errorMessage && (
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md text-sm">
+            {errorMessage}
+          </div>
+        )}
         <div>
           <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">Имя</label>
           <input
@@ -120,9 +208,14 @@ export default function ProfileForm() {
 
         <button
           type="submit"
-          className="w-full rounded-md py-3 font-medium transition-colors bg-blue-600 text-white hover:bg-blue-700"
+          disabled={isSaving}
+          className={`w-full rounded-md py-3 font-medium transition-colors ${
+            isSaving
+              ? 'bg-gray-400 text-gray-700 cursor-not-allowed'
+              : 'bg-blue-600 text-white hover:bg-blue-700'
+          }`}
         >
-          Редактировать
+          {isSaving ? 'Сохранение...' : 'Редактировать'}
         </button>
       </form>
     </div>

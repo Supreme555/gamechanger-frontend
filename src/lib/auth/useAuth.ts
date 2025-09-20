@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { clientTokens, UserData } from "./token";
+import { AuthService } from "../api/services";
 import apiClient from "../api/axios";
 
 interface AuthState {
@@ -27,9 +28,9 @@ export function useAuth() {
     isLoading: true,
     isAuthenticated: false,
   });
-  
+
   const router = useRouter();
-  
+
   // Флаг для предотвращения множественных попыток обновления токена
   const refreshAttempts = useRef(0);
   const maxRefreshAttempts = 3;
@@ -62,11 +63,13 @@ export function useAuth() {
       },
       async (error) => {
         const originalRequest = error.config;
-        
+
         if (error.response?.status === 401 && !originalRequest._retry) {
           // Проверяем количество попыток обновления токена
           if (refreshAttempts.current >= maxRefreshAttempts) {
-            console.error('Превышено максимальное количество попыток обновления токена');
+            console.error(
+              "Превышено максимальное количество попыток обновления токена"
+            );
             refreshAttempts.current = 0;
             logout();
             return Promise.reject(error);
@@ -77,7 +80,7 @@ export function useAuth() {
           refreshAttempts.current += 1;
 
           // Если это не запрос на обновление токена, пробуем обновить
-          if (!originalRequest.url?.includes('/auth/refresh')) {
+          if (!originalRequest.url?.includes("/auth/refresh")) {
             const refreshed = await refreshToken();
             if (refreshed) {
               // Повторяем оригинальный запрос с новым токеном
@@ -88,12 +91,12 @@ export function useAuth() {
               }
             }
           }
-          
+
           // Не удалось обновить токен или это был запрос на обновление
           refreshAttempts.current = 0;
           logout();
         }
-        
+
         return Promise.reject(error);
       }
     );
@@ -113,10 +116,10 @@ export function useAuth() {
       }
 
       // Проверяем токен запросом к профилю
-      const response = await apiClient.get("/auth/profile");
+      const userData = await AuthService.getProfile();
 
       setAuthState({
-        user: response.data,
+        user: userData,
         isLoading: false,
         isAuthenticated: true,
       });
@@ -134,9 +137,9 @@ export function useAuth() {
 
   const login = async (loginData: LoginData) => {
     try {
-      const response = await apiClient.post("/auth/login", loginData);
+      const authResponse = await AuthService.login(loginData);
 
-      const { accessToken, refreshToken, user } = response.data;
+      const { accessToken, refreshToken, user } = authResponse;
 
       // Сохраняем токены
       clientTokens.setTokens({ accessToken, refreshToken });
@@ -154,9 +157,11 @@ export function useAuth() {
       return { success: true };
     } catch (error: unknown) {
       console.error("Login error:", error);
-      const errorMessage = error && typeof error === 'object' && 'response' in error 
-        ? (error as { response?: { data?: { message?: string } } }).response?.data?.message 
-        : 'Ошибка входа';
+      const errorMessage =
+        error && typeof error === "object" && "response" in error
+          ? (error as { response?: { data?: { message?: string } } }).response
+              ?.data?.message
+          : "Ошибка входа";
       return {
         success: false,
         error: errorMessage || "Ошибка входа",
@@ -166,9 +171,9 @@ export function useAuth() {
 
   const register = async (registerData: RegisterData) => {
     try {
-      const response = await apiClient.post("/auth/register", registerData);
+      const authResponse = await AuthService.register(registerData);
 
-      const { accessToken, refreshToken, user } = response.data;
+      const { accessToken, refreshToken, user } = authResponse;
 
       // Сохраняем токены
       clientTokens.setTokens({ accessToken, refreshToken });
@@ -186,9 +191,11 @@ export function useAuth() {
       return { success: true };
     } catch (error: unknown) {
       console.error("Register error:", error);
-      const errorMessage = error && typeof error === 'object' && 'response' in error 
-        ? (error as { response?: { data?: { message?: string } } }).response?.data?.message 
-        : 'Ошибка регистрации';
+      const errorMessage =
+        error && typeof error === "object" && "response" in error
+          ? (error as { response?: { data?: { message?: string } } }).response
+              ?.data?.message
+          : "Ошибка регистрации";
       return {
         success: false,
         error: errorMessage || "Ошибка регистрации",
@@ -204,21 +211,21 @@ export function useAuth() {
 
     // Помечаем, что начали процесс обновления токена
     isRefreshing.current = true;
-    
+
     refreshPromise.current = (async (): Promise<boolean> => {
       try {
         const refresh = clientTokens.getRefreshToken();
         if (!refresh) {
-          console.log('No refresh token available');
+          console.log("No refresh token available");
           return false;
         }
 
-        console.log('Attempting to refresh token...');
-        const response = await apiClient.post("/auth/refresh", {
+        console.log("Attempting to refresh token...");
+        const authResponse = await AuthService.refreshToken({
           refreshToken: refresh,
         });
 
-        const { accessToken, refreshToken: newRefreshToken } = response.data;
+        const { accessToken, refreshToken: newRefreshToken } = authResponse;
 
         // Сохраняем новые токены
         clientTokens.setTokens({
@@ -226,7 +233,7 @@ export function useAuth() {
           refreshToken: newRefreshToken,
         });
 
-        console.log('Token refreshed successfully');
+        console.log("Token refreshed successfully");
         return true;
       } catch (error) {
         console.error("Token refresh error:", error);
@@ -244,7 +251,7 @@ export function useAuth() {
   const logout = async () => {
     try {
       // Вызываем logout на сервере
-      await apiClient.post("/auth/logout");
+      await AuthService.logout();
     } catch (error) {
       console.error("Logout error:", error);
     } finally {
@@ -252,10 +259,10 @@ export function useAuth() {
       refreshAttempts.current = 0;
       isRefreshing.current = false;
       refreshPromise.current = null;
-      
+
       // Удаляем токены локально
       clientTokens.removeTokens();
-      
+
       // Обновляем состояние
       setAuthState({
         user: null,
