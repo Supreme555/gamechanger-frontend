@@ -1,4 +1,4 @@
-import ProfileForm from '@/components/dashboard/ProfileForm';
+import { ProfileForm } from '@/components/dashboard';
 
 export default function ProfilePage() {
   return (

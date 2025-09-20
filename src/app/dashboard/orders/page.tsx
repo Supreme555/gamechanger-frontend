@@ -1,4 +1,4 @@
-import OrdersList from '@/components/dashboard/OrdersList';
+import { OrdersList } from '@/components/dashboard';
 
 export default function OrdersPage() {
   return (

@@ -4,9 +4,7 @@ import { useState, useEffect } from 'react';
 import { DealsService, Deal } from '@/lib/api/services';
 import { useAuthContext } from '@/lib/auth';
 import { RefreshCw, Calendar, Package, RotateCcw, Plus, Eye, Edit, Trash2 } from 'lucide-react';
-import CreateDealModal from './CreateDealModal';
-import DealDetailsModal from './DealDetailsModal';
-import EditDealModal from './EditDealModal';
+import { CreateDealModal, DealDetailsModal, EditDealModal } from '../deals';
 
 interface OrdersListProps {
   className?: string;
