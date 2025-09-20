@@ -15,7 +15,7 @@ interface ProfileFormState {
 
 
 export default function ProfileForm() {
-  const { user } = useAuthContext();
+  const { user, isAuthenticated, isLoading: authLoading } = useAuthContext();
   const [form, setForm] = useState<ProfileFormState>({
     name: '',
     email: '',
@@ -35,7 +35,7 @@ export default function ProfileForm() {
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
 
-  // Загрузка профиля пользователя
+  // Загрузка профиля пользователя только после завершения аутентификации
   useEffect(() => {
     const fetchProfile = async () => {
       try {
@@ -56,10 +56,12 @@ export default function ProfileForm() {
       }
     };
 
-    if (user) {
+    if (!authLoading && isAuthenticated && user) {
       fetchProfile();
+    } else if (!authLoading && !isAuthenticated) {
+      setIsLoading(false);
     }
-  }, [user]);
+  }, [authLoading, isAuthenticated, user]);
 
   const onChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -120,13 +122,26 @@ export default function ProfileForm() {
     }
   };
 
-  if (isLoading) {
+  // Показываем загрузку если идет процесс аутентификации или загрузки профиля
+  if (authLoading || (isAuthenticated && isLoading)) {
     return (
       <div className="flex items-center justify-center py-12">
         <div className="flex flex-col items-center space-y-4">
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-500 border-t-transparent"></div>
-          <p className="text-gray-600">Загрузка профиля...</p>
+          <p className="text-gray-600">
+            {authLoading ? 'Проверка аутентификации...' : 'Загрузка профиля...'}
+          </p>
         </div>
+      </div>
+    );
+  }
+
+  // Если не аутентифицирован, показываем сообщение
+  if (!isAuthenticated) {
+    return (
+      <div className="text-center py-12">
+        <h3 className="text-lg font-medium text-gray-900 mb-2">Требуется авторизация</h3>
+        <p className="text-gray-600">Войдите в систему для просмотра профиля</p>
       </div>
     );
   }
