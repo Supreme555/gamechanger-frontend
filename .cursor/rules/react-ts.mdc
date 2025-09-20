@@ -1,0 +1,28 @@
+---
+alwaysApply: true
+---
+
+Этот проект использует:
+
+- UI: Tailwind CSS
+- HTTP клиент: Axios
+- Алиасы импортов: `@/*` (настроено в tsconfig.json)
+- Исследование библиотек и использования API через Context7
+
+Рекомендации:
+
+- Предпочитай функциональные компоненты с TypeScript
+- Все UI компоненты должны следовать стилю и паттернам доступности Radix
+- Стилизация исключительно через Tailwind CSS
+- Настрой экземпляр Axios в `lib/api/axios.ts`
+- Организуй импорты используя алиас `@/*`
+- Используй декларативный, типизированный код и следуй лучшим практикам Next.js App Router
+- Используй pnpm
+
+Next.js особенности
+
+- App Router: использовать server components по умолчанию, client components только там, где есть интерактивность.
+- Metadata API: для SEO и соц. превью (export const metadata = { title, description }).
+- Dynamic imports: для тяжёлых компонентов (например, графиков).
+- Middleware: для защиты роутов (auth guard).
+- Error boundaries: реализовать кастомные страницы ошибок (error.tsx, not-found.tsx).
